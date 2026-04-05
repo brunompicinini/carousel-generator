@@ -5,7 +5,7 @@ import { generateCarouselSlides } from "@/lib/langchain";
 import { headers } from "next/headers";
 
 export async function generateCarouselSlidesAction(userPrompt: string) {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return null;
   }
 
@@ -21,7 +21,7 @@ export async function generateCarouselSlidesAction(userPrompt: string) {
 
   const generatedSlides = await generateCarouselSlides(
     userPrompt,
-    process.env.OPENAI_API_KEY
+    process.env.ANTHROPIC_API_KEY
   );
   return generatedSlides;
 }
