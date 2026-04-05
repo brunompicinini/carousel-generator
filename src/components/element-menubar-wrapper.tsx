@@ -125,7 +125,7 @@ function ElementMenubar({
 
   const handleChangeType = (newType: string) => {
     const newElement = getDefaultForType(newType);
-    if (currentElementValue?.text && "text" in newElement) {
+    if (currentElementValue && "text" in currentElementValue && currentElementValue.text && "text" in newElement) {
       (newElement as any).text = currentElementValue.text;
     }
     setValue(fieldName, newElement as any);
