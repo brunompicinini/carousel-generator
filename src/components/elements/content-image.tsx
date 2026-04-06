@@ -44,6 +44,7 @@ export function ContentImage({
       className={cn(
         "flex flex-col w-full outline-transparent ring-offset-background",
         !isFill && !isExpand && "h-full rounded-md",
+        isExpand && "h-full",
         currentSelection == fieldName &&
           "outline-input ring-2 ring-offset-2 ring-ring",
         !isFill && !isExpand && className
@@ -57,7 +58,7 @@ export function ContentImage({
           isFill
             ? "hidden"
             : isExpand
-            ? "object-cover w-full"
+            ? "object-cover w-full h-full"
             : "rounded-md",
           image.style.objectFit == ObjectFitType.enum.Cover
             ? "object-cover w-full h-full"
@@ -67,7 +68,11 @@ export function ContentImage({
         )}
         style={{
           opacity: image.style.opacity / 100,
-          ...(isExpand ? { height: "200px" } : {}),
+          ...(isExpand
+            ? { minHeight: `${image.style.height ?? 200}px` }
+            : !isFill && image.style.height
+            ? { height: `${image.style.height}px` }
+            : {}),
         }}
         onClick={(event) => {
           setCurrentPage(pageNumber);

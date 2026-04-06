@@ -17,10 +17,12 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { Sparkles } from "lucide-react";
 import { DocumentFormReturn } from "@/lib/document-form-types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { generateCarouselSlidesAction } from "@/app/actions";
+import { usePagerContext } from "@/lib/providers/pager-context";
+import { MultiSlideSchema } from "@/lib/validation/slide-schema";
 
 const FormSchema = z.object({
   prompt: z.string().min(2, {
@@ -28,9 +30,17 @@ const FormSchema = z.object({
   }),
 });
 
+const WORD_DELAY = 54; // ms per word
+const ELEMENT_PAUSE = 80; // ms pause between elements
+const SLIDE_PAUSE = 150; // ms pause between slides
+const SLIDES_PER_GROUP = 3; // navigate every N slides
+
 export function AITextAreaForm() {
-  const { setValue }: DocumentFormReturn = useFormContext(); // retrieve those props
+  const { setValue }: DocumentFormReturn = useFormContext();
+  const { setCurrentPage } = usePagerContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cancelRef = useRef(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -38,15 +48,73 @@ export function AITextAreaForm() {
     },
   });
 
+  async function animateSlides(
+    slides: z.infer<typeof MultiSlideSchema>
+  ) {
+    // Create empty slides (text blanked out, images kept as-is)
+    const emptySlides = slides.map((slide) => ({
+      ...slide,
+      elements: slide.elements.map((el) =>
+        "text" in el ? { ...el, text: "" } : el
+      ),
+    }));
+
+    setValue("slides", emptySlides);
+    setCurrentPage(0);
+
+    const delay = (ms: number) =>
+      new Promise((r) => setTimeout(r, ms));
+
+    for (let s = 0; s < slides.length; s++) {
+      if (cancelRef.current) return;
+
+      // Navigate to first slide of each new group
+      if (s % SLIDES_PER_GROUP === 0) {
+        setCurrentPage(s);
+        await delay(600); // let carousel scroll settle
+      }
+      await delay(SLIDE_PAUSE);
+
+      for (let e = 0; e < slides[s].elements.length; e++) {
+        if (cancelRef.current) return;
+        const element = slides[s].elements[e];
+        if (!("text" in element)) continue;
+
+        const fullText = element.text;
+        const words = fullText.split(/(\s+)/); // split keeping whitespace
+        let built = "";
+        for (const word of words) {
+          if (cancelRef.current) {
+            setValue(`slides.${s}.elements.${e}.text`, fullText);
+            break;
+          }
+          built += word;
+          // Only delay on actual words, not whitespace
+          if (word.trim()) {
+            setValue(`slides.${s}.elements.${e}.text`, built);
+            await delay(WORD_DELAY);
+          }
+        }
+        await delay(ELEMENT_PAUSE);
+      }
+    }
+
+    // Ensure all text is fully set (in case of timing edge cases)
+    setValue("slides", slides);
+    setCurrentPage(0);
+  }
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
+    cancelRef.current = false;
 
-    // Use server action here instead of the local function
     const generatedSlides = await generateCarouselSlidesAction(data.prompt);
 
     if (generatedSlides) {
-      setValue("slides", generatedSlides);
-      // TODO Fix toast not working
+      setIsLoading(false);
+      setIsAnimating(true);
+      await animateSlides(generatedSlides);
+      setIsAnimating(false);
       toast({
         title: "New carousel generated",
       });
@@ -54,8 +122,8 @@ export function AITextAreaForm() {
       toast({
         title: "Failed to generate carousel",
       });
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   return (
@@ -78,15 +146,28 @@ export function AITextAreaForm() {
                     style={{ height: 300 }}
                     {...field}
                   />
-                  <Button type="submit" className="w-full">
-                    {isLoading ? (
-                      <LoadingSpinner />
-                    ) : (
-                      <span className="flex flex-row gap-1.5">
-                        <Sparkles className="w-4 h-4" /> Format
-                      </span>
-                    )}
-                  </Button>
+                  {isAnimating ? (
+                    <Button
+                      type="button"
+                      className="w-full"
+                      variant="secondary"
+                      onClick={() => {
+                        cancelRef.current = true;
+                      }}
+                    >
+                      Skip Animation
+                    </Button>
+                  ) : (
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <span className="flex flex-row gap-1.5">
+                          <Sparkles className="w-4 h-4" /> Format
+                        </span>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </FormControl>
               <FormMessage />

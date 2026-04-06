@@ -119,7 +119,9 @@ function ElementMenubar({
     control,
     name: getParent(fieldName),
   });
+  const { setCurrentSelection } = useSelectionContext();
   const currentElementNumber = getElementNumber(fieldName);
+  const parentPath = getParent(fieldName);
   const currentElementValue = watch(fieldName);
   const currentType = currentElementValue?.type;
 
@@ -134,12 +136,15 @@ function ElementMenubar({
   return (
     <div
       className={cn(
-        "flex flex-row gap-0 bg-background rounded-t-md rounded-br-md rounded-bl-none px-1",
+        "flex flex-row gap-0 bg-background rounded-t-md rounded-br-md rounded-bl-none px-1 border border-border shadow-sm",
         className
       )}
     >
       <Button
-        onClick={() => swap(currentElementNumber, currentElementNumber - 1)}
+        onClick={() => {
+          swap(currentElementNumber, currentElementNumber - 1);
+          setCurrentSelection(`${parentPath}.${currentElementNumber - 1}` as ElementFieldPath, null);
+        }}
         variant="ghost"
         size="icon"
         className="w-6 h-6"
@@ -174,7 +179,10 @@ function ElementMenubar({
         onChangeType={handleChangeType}
       />
       <Button
-        onClick={() => swap(currentElementNumber, currentElementNumber + 1)}
+        onClick={() => {
+          swap(currentElementNumber, currentElementNumber + 1);
+          setCurrentSelection(`${parentPath}.${currentElementNumber + 1}` as ElementFieldPath, null);
+        }}
         variant="ghost"
         size="icon"
         className="w-6 h-6"
@@ -209,7 +217,7 @@ const ElementMenubarWrapper = React.forwardRef<
       <div
         id={`element-menubar-${fieldName}`}
         className={cn(
-          "flex flex-row absolute -top-7 right-0",
+          "flex flex-row absolute -top-9 right-0 z-10",
           currentSelection != fieldName && "hidden",
           className
         )}

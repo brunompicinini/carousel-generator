@@ -22,8 +22,11 @@ export function PageFrame({
 
   return (
     <div
-      className={cn("flex flex-col h-full w-full", className)}
-      style={style}
+      className={cn("grid h-full w-full", className)}
+      style={{
+        ...style,
+        gridTemplateRows: "1fr auto",
+      }}
       onClick={(event) => {
         setCurrentPage(pageNumber);
         setCurrentSelection(fieldName, event);

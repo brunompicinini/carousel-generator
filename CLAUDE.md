@@ -30,7 +30,7 @@ src/
     settings-panel.tsx    # Left sidebar with vertical tabs (Settings/Theme/Fonts/File)
     style-menu.tsx        # Appears when element selected (fontSize, align, bottomSpacing, objectFit, image)
     main-nav.tsx          # Top bar: Pager + download popover (PDF or Images ZIP)
-    slide-menubar.tsx     # Per-slide actions: move, clone, delete
+    slide-menubar.tsx     # Per-slide actions: move, clone, delete, per-slide background color
     element-menubar-wrapper.tsx  # Per-element actions: move, clone, delete, change type
     ai-panel.tsx          # "Format with AI" section
     ai-textarea-form.tsx  # AI text paste + format button
@@ -39,7 +39,7 @@ src/
       document.tsx        # Renders embla Carousel with all slides
       common-page.tsx     # Single slide renderer (layers + elements + footer)
       page-base.tsx       # Slide wrapper with sizing
-      page-frame.tsx      # Click handler for slide selection
+      page-frame.tsx      # Grid container (1fr auto) for slide selection + vertical centering
       page-layout.tsx     # Flex column layout for elements
       new-page.tsx        # "Add slide" button + dialog
       add-element.tsx     # "+" button inside slide + dialog
@@ -121,19 +121,22 @@ Document
     │   ├── text: string (for text elements)
     │   ├── source: { src, type } (for image elements)
     │   └── style: TextStyleSchema | ContentImageStyleSchema
-    └── backgroundImage: ImageSchema
+    ├── backgroundImage: ImageSchema
+    └── backgroundColor: string (optional, per-slide override of theme background)
 ```
 
 **Element types**: Title, Subtitle, Description, ContentImage, Image
 **Text style** (per-element override): fontSize (8-200px, optional — if unset computed from global), align (Left/Center/Right), paragraphSpacing/bottomSpacing (0-3em)
 **Font style** (global per-font in config.fonts): fontSize (8-200px, default font1=48, font2=18), lineHeight (0.5-4), letterSpacing (-0.1 to 0.5em), fontWeight (100-900), textBalance (boolean → `text-wrap: balance`)
 **Font size proportional scaling**: Title uses global font1 fontSize directly. Subtitle uses font1 fontSize × 0.65. Description uses global font2 fontSize. Per-element fontSize override takes priority over global.
-**Slide padding**: configurable via `config.theme.padding` (0-80px, default 40px) — controls inner padding of all slides
-**Image style**: opacity (0-100), objectFit (Contain/Cover/Expand/Fill)
-  - Contain: image fits inside element
-  - Cover: image fills element with crop (fixed h-40)
-  - Expand: image goes edge-to-edge horizontally (escapes PageFrame p-10 padding via negative margins on wrapper); if first/last element, also removes top/bottom padding
+**Slide padding**: configurable via `config.theme.padding` (0-80px, default 30px) — controls inner padding of all slides
+**Image style**: opacity (0-100), objectFit (Contain/Cover/Expand/Fill), height (50-500px, optional)
+  - Contain: image fits inside element; if height set, uses fixed height
+  - Cover: image fills element with crop; if height set, uses fixed height
+  - Expand: image goes edge-to-edge horizontally (escapes PageFrame padding via negative margins on wrapper); if first/last element, also removes top/bottom padding; uses minHeight so it can grow to fill remaining space when last element; if last element, footer is hidden and grid collapses to single row
   - Fill: image becomes full-slide background layer (rendered via ContentImageFillLayer at PageBase level)
+  - Height slider appears in style menu for ContentImage (except Fill mode), default 200px
+**Per-slide background color**: optional `backgroundColor` field on each slide, overrides global `config.theme.background`. Color picker dot in slide menubar (between arrows) with hex input and "Reset to global" option.
 **Brand**: showBrand toggle controls footer signature visibility
 
 ## State Management
@@ -152,10 +155,16 @@ All state lives in a single React Hook Form instance (`useForm` with `zodResolve
 - **Unstyled + Styled schemas**: AI generates unstyled content, merged with style defaults via Zod `.parse({})`
 - **Deep clone for mutations**: `JSON.parse(JSON.stringify(obj))` when duplicating slides/elements
 - **Menubar wrappers**: `SlideMenubarWrapper` and `ElementMenubarWrapper` add context actions (move/clone/delete/change type) to their children
-- **Expand image layout**: CommonPage detects Expand images at first/last position to adjust PageFrame padding (pt-0/pb-0) and PageLayout justify. Negative margins on ElementMenubarWrapper push image edge-to-edge.
+- **Expand image layout**: CommonPage detects Expand images at first/last position to adjust PageFrame padding (pt-0/pb-0) and PageLayout justify. Negative margins on ElementMenubarWrapper push image edge-to-edge. `marginBottom` on Expand wrapper is only applied if not the last element.
+- **Element menubar positioning**: Positioned at `-top-9 right-0 z-10` (above the element) with border and shadow for visibility. Slide menubar is outside `PageBase` so it's unaffected.
+- **Element swap preserves selection**: When moving elements up/down via `ElementMenubar`, `setCurrentSelection` is called with the new field path after `swap()`, so the element stays selected and the menubar remains visible.
+- **AI animation constants** (in `ai-textarea-form.tsx`): `WORD_DELAY` (ms per word), `ELEMENT_PAUSE`, `SLIDE_PAUSE`, `SLIDES_PER_GROUP` — tune these to adjust typewriter speed and navigation rhythm.
 - **Export modes**: Download button opens popover with PDF (jsPDF) or Images ZIP (JSZip) options. Both use html-to-image canvas pipeline. Image proxy (api/proxy) handles CORS; falls back to window.location.origin if NEXT_PUBLIC_APP_URL not set.
 - **Quick-add (no dialogs)**: "+" for new slide directly creates a Content slide (no type picker dialog). "+" for new element directly adds a Description element (no type picker dialog). Dialog components are commented out but preserved for future use (`new-page-dialog-content.tsx`, `new-element-dialog-content.tsx`). Users change element type after creation via the element menubar's swap button.
 - **Keyboard navigation**: Arrow keys navigate between slides via a global `document` keydown listener in `carousel.tsx`. Listener skips navigation when focus is on a `textarea`, `input`, or `contentEditable` element, allowing normal text cursor movement.
+- **Smart carousel scroll**: `document.tsx` only calls `api.scrollTo()` when the target slide is not already visible (`api.slidesInView()`), preventing annoying jumps when clicking a slide that's already on screen.
+- **Slide vertical layout**: `PageFrame` uses CSS Grid (`grid-template-rows: 1fr auto`) so content centers in the top row while Footer sits in the bottom row without stealing vertical center space.
+- **Reset all**: Settings tab has a "Reset all" button that calls `form.reset(defaultValues)` + `localStorage.removeItem("documentFormKey")` to start fresh.
 
 ## AI Formatting (Format with AI)
 
@@ -164,7 +173,7 @@ All state lives in a single React Hook Form instance (`useForm` with `zodResolve
 3. Claude Haiku 4.5 responds via **tool use** (`carouselCreator` tool) with structured JSON
 4. Response validated against `UnstyledDocumentSchema` (Zod safeParse)
 5. Valid output transformed to `MultiSlideSchema` (adds default styles: fontSize, align, etc.)
-6. `setValue("slides", generatedSlides)` **replaces all slides** in React Hook Form state
+6. **Simulated streaming animation**: slides are created with empty text, then filled word-by-word via `setValue` calls with delays (typewriter effect). Carousel auto-navigates in groups of 3 slides (`SLIDES_PER_GROUP`). "Skip Animation" button allows jumping to final result instantly.
 7. UI re-renders, localStorage auto-saves
 
 ### How the AI knows the schema

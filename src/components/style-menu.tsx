@@ -140,6 +140,19 @@ export function StyleMenu({
             itemClassName="h-10 w-10"
           />
         ) : null}
+        {type === ElementType.enum.ContentImage &&
+        style && "objectFit" in style && style.objectFit !== "Fill" ? (
+          <SliderInputField
+            fieldName={`${stylePath}.height`}
+            form={form}
+            label="Height"
+            min={50}
+            max={500}
+            step={10}
+            defaultValue={200}
+            className="w-full"
+          />
+        ) : null}
         {type == ElementType.enum.Image ||
         type == ElementType.enum.ContentImage ? (
           <>

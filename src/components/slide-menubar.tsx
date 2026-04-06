@@ -10,6 +10,7 @@ import {
   Trash,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import {
   DocumentFormReturn,
@@ -18,6 +19,81 @@ import {
 import { useFieldArrayValues } from "@/lib/hooks/use-field-array-values";
 import { cn } from "@/lib/utils";
 import { getSlideNumber } from "@/lib/field-path";
+import React, { useState, useRef, useEffect } from "react";
+
+function SlideColorPicker({
+  fieldName,
+}: {
+  fieldName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { watch, setValue }: DocumentFormReturn = useFormContext();
+  const bgColorPath = `${fieldName}.backgroundColor` as any;
+  const currentBgColor = watch(bgColorPath);
+  const globalBgColor = watch("config.theme.background");
+  const displayColor = currentBgColor || globalBgColor;
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative flex items-center" ref={ref}>
+      <button
+        className="w-5 h-5 rounded-full border-2 border-muted-foreground/30 hover:border-muted-foreground cursor-pointer flex-shrink-0"
+        style={{ backgroundColor: displayColor }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        title="Slide background color"
+      />
+      {open && (
+        <div
+          className="absolute top-full right-0 mt-1 rounded-md border bg-popover p-3 shadow-md z-50"
+          style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-medium text-muted-foreground">Background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={displayColor}
+                onChange={(e) => setValue(bgColorPath, e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+              />
+              <input
+                type="text"
+                value={currentBgColor || ""}
+                placeholder={globalBgColor}
+                onChange={(e) => setValue(bgColorPath, e.target.value || undefined)}
+                className="w-20 text-xs px-2 py-1 border rounded bg-background"
+              />
+            </div>
+            {currentBgColor && (
+              <button
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setValue(bgColorPath, undefined)}
+              >
+                <X className="w-3 h-3" />
+                Reset to global
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SlideMenubar({
   slidesFieldArray,
@@ -38,7 +114,7 @@ export default function SlideMenubar({
   return (
     <div
       className={cn(
-        "flex flex-row gap-0 bg-background rounded-t-md rounded-br-md rounded-bl-none px-1 border",
+        "flex flex-row gap-0 items-center bg-background rounded-t-md rounded-br-md rounded-bl-none px-1 border",
         className
       )}
     >
@@ -54,6 +130,7 @@ export default function SlideMenubar({
       >
         <ChevronLeft className="w-4 h-4" />
       </Button>
+      <SlideColorPicker fieldName={fieldName} />
       <Button
         onClick={() => {
           console.log({

@@ -31,11 +31,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Drawer } from "vaul";
 import { DrawerContent, DrawerTrigger } from "@/components/drawer";
 import { ReactNode, useEffect, useState } from "react";
-import { buttonVariants } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { ScrollBar } from "./ui/scroll-area";
 import { useSelectionContext } from "@/lib/providers/selection-context";
 import { useFieldsFileImporter } from "@/lib/hooks/use-fields-file-importer";
-import { set } from "zod";
+import { defaultValues } from "@/lib/default-document";
 import { StyleMenu } from "@/components/style-menu";
 import { useFormContext } from "react-hook-form";
 import { DocumentFormReturn } from "@/lib/document-form-types";
@@ -178,6 +178,17 @@ export function SidebarTabsPanel() {
             <BrandForm />
             <Separator className="mt-6 mb-4"></Separator>
             <PageNumberForm />
+            <Separator className="mt-6 mb-4"></Separator>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => {
+                form.reset(defaultValues);
+                localStorage.removeItem("documentFormKey");
+              }}
+            >
+              Reset all
+            </Button>
           </VerticalTabsContent>
           <VerticalTabsContent
             value={ALL_FORMS.theme.value}
@@ -212,6 +223,7 @@ export function SidebarTabsPanel() {
 export function DrawerFormsPanel({ className }: { className: string }) {
   const { currentSelection } = useSelectionContext();
   const [tab, setTab] = useState(ALL_FORMS.settings.value);
+  const form: DocumentFormReturn = useFormContext();
 
   return (
     <Tabs

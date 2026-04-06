@@ -55,7 +55,11 @@ export function Document({
   useEffect(() => {
     if (api) {
       const NEW_PAGE_BUTTON_OFFSET = 1;
-      api.scrollTo(currentPage + NEW_PAGE_BUTTON_OFFSET);
+      const target = currentPage + NEW_PAGE_BUTTON_OFFSET;
+      const visible = api.slidesInView();
+      if (!visible.includes(target)) {
+        api.scrollTo(target);
+      }
     }
   }, [currentPage, api]);
 

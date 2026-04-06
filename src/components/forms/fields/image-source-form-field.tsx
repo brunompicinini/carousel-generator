@@ -45,7 +45,7 @@ export function ImageSourceFormField({
       className="w-full"
     >
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value={ImageInputType.Url}>Url</TabsTrigger>
+        <TabsTrigger value={ImageInputType.Url}>URL</TabsTrigger>
         <TabsTrigger value={ImageInputType.Upload}>Upload</TabsTrigger>
       </TabsList>
       <TabsContent value={ImageInputType.Url}>

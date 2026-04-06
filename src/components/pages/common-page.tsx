@@ -77,7 +77,7 @@ export function CommonPage({
 
   return (
     <PageBase size={size} fieldName={backgroundImageField}>
-      <BackgroundLayer background={config.theme.background} className="-z-20" />
+      <BackgroundLayer background={slide.backgroundColor || config.theme.background} className="-z-20" />
       {slide.backgroundImage?.source.src ? (
         <BackgroundImageLayer image={slide.backgroundImage} className="-z-10" />
       ) : null}
@@ -93,10 +93,11 @@ export function CommonPage({
         fieldName={backgroundImageField}
         className={cn(className)}
         style={{
-          paddingTop: firstIsExpand ? 0 : `${config.theme.padding ?? 40}px`,
-          paddingBottom: lastIsExpand ? 0 : `${config.theme.padding ?? 40}px`,
-          paddingLeft: `${config.theme.padding ?? 40}px`,
-          paddingRight: `${config.theme.padding ?? 40}px`,
+          paddingTop: firstIsExpand ? 0 : `${config.theme.padding ?? 30}px`,
+          paddingBottom: lastIsExpand ? 0 : `${config.theme.padding ?? 30}px`,
+          paddingLeft: `${config.theme.padding ?? 30}px`,
+          paddingRight: `${config.theme.padding ?? 30}px`,
+          ...(lastIsExpand ? { gridTemplateRows: "1fr" } : {}),
         }}
       >
         <PageLayout
@@ -147,17 +148,17 @@ export function CommonPage({
                 style={
                   element.style.objectFit === ObjectFitType.enum.Expand
                     ? {
-                        marginLeft: "-40px",
-                        marginRight: "-40px",
-                        width: "calc(100% + 80px)",
-                        marginBottom: "12px",
+                        marginLeft: `-${config.theme.padding ?? 30}px`,
+                        marginRight: `-${config.theme.padding ?? 30}px`,
+                        width: `calc(100% + ${(config.theme.padding ?? 30) * 2}px)`,
+                        ...(index < slide.elements.length - 1 ? { marginBottom: "12px" } : {}),
+                        ...(index === slide.elements.length - 1 ? { flexGrow: 1 } : {}),
                       }
                     : undefined
                 }
               >
                 <ContentImage
                   fieldName={currentField as ElementFieldPath}
-                  className="h-40"
                   isFirst={index === 0}
                   isLast={index === slide.elements.length - 1}
                 />
@@ -171,7 +172,9 @@ export function CommonPage({
             />
           ) : null}
         </PageLayout>
-        <Footer number={index + 1} config={config} ref={footerRef} />
+        {!lastIsExpand && (
+          <Footer number={index + 1} config={config} ref={footerRef} />
+        )}
       </PageFrame>
     </PageBase>
   );

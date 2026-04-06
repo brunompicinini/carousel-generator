@@ -41,6 +41,7 @@ export const UnstyledSlideSchema = z.object({
 export const CommonSlideSchema = z.object({
   elements: z.array(ElementSchema).default([]),
   backgroundImage: ImageSchema.default(DEFAULT_BACKGROUND_IMAGE_INPUT),
+  backgroundColor: z.string().optional(),
 });
 
 export const UnstyledMultiSlideSchema = z.array(UnstyledSlideSchema);

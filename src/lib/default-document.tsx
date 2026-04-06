@@ -28,7 +28,7 @@ export const defaultValues = {
       primary: "#0d0d0d",
       secondary: "#161616",
       background: "#ffffff",
-      padding: 40,
+      padding: 30,
     },
     fonts: {
       font1: "Anton",
