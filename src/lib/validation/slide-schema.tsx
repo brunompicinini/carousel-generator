@@ -4,6 +4,7 @@ import {
   DEFAULT_BACKGROUND_IMAGE_INPUT,
   DEFAULT_CONTENT_IMAGE_INPUT,
   ImageSchema,
+  UnstyledContentImageSchema,
 } from "./image-schema";
 import {
   TitleSchema,
@@ -21,6 +22,7 @@ export const UnstyledElementSchema = z.discriminatedUnion("type", [
   UnstyledTitleSchema,
   UnstyledSubtitleSchema,
   UnstyledDescriptionSchema,
+  UnstyledContentImageSchema,
 ]);
 
 export const ElementSchema = z.discriminatedUnion("type", [

@@ -11,6 +11,7 @@ import {
   UnstyledDescriptionSchema,
   UnstyledSubtitleSchema,
 } from "@/lib/validation/text-schema";
+import { UnstyledContentImageSchema } from "@/lib/validation/image-schema";
 
 const carouselToolSchema = {
   name: "carouselCreator",
@@ -20,27 +21,41 @@ const carouselToolSchema = {
       UnstyledTitleSchema,
       UnstyledSubtitleSchema,
       UnstyledDescriptionSchema,
+      UnstyledContentImageSchema,
     },
   }) as Anthropic.Tool["input_schema"],
 };
 
 const systemPrompt = `
-You are a text formatter that organizes provided text into carousel slides.
+You are a carousel layout engine. You organize provided text (and visual hints) into structured carousel slides.
+
+Element types: 'Title', 'Subtitle', 'Description', 'ContentImage'.
+ - Title: short, impactful headline (max 160 chars). Use for the main idea of a slide.
+ - Subtitle: secondary headline (max 160 chars). Use for supporting context or a sub-point.
+ - Description: body text. Use for longer explanations, arguments, or narrative.
+ - ContentImage: image placeholder (no text, no source). The user will add the actual image later.
 
 Rules:
- - Respect the argument schema. Only use element types: 'Title', 'Subtitle', 'Description'.
- - Each slide can have multiple elements of different types.
- - Respect 'maxLength' constraints. Write less than 70% of the max.
+ - Respect the argument schema and 'maxLength' constraints. Write less than 80% of the max.
+ - Each slide can have 1-3 elements of different types.
 
-Guidelines:
- - Split the provided text into 8-15 slides.
- - Each slide has 2-3 elements. E.g. [Title, Description], or [Title, Subtitle], or [Subtitle, Description], etc.
+Slide layout guidelines:
+ - Text should come already pre-formatted into slides. If not, split the provided text into 6-10 slides.
+ - Vary slide compositions. Some only text, some with image, some with just description, some just title, some a mix, and so on. Examples:
+   Text-only slides: [Title], [Description], [Title, Description], [Title, Subtitle], [Subtitle, Description], [Title, Subtitle, Description].
+   With image: [Title, ContentImage], [ContentImage, Description], [Title, ContentImage, Description], [ContentImage].
  - Each slide should focus on one idea or section from the text.
  - Preserve the original meaning and wording as much as possible. Only rephrase when needed to fit the slide format.
  - Don't add slide numbers.
  - Don't invent new content. Only use what's in the provided text.
  - Description text should be short and concise.
- - Pay attention and keep line breaks. If there is a line break (\n) transform into two (\n\n) so the final text is properly spaced.
+ - Pay attention and keep line breaks. If there is a line break (\\n) transform into two (\\n\\n) so the final text is properly spaced.
+
+Image placeholders:
+ - When the input text suggests a visual (e.g. "sugestão visual:", "imagem:", a chart/graph description, or any visual cue), create a ContentImage element in that slide.
+ - Place ContentImage where the visual suggestion appears in the slide structure.
+ - Do NOT include the visual suggestion text in any text element — replace it with a ContentImage placeholder.
+ - Only add ContentImage when the text explicitly suggests a visual. Don't add images to every slide.
 `;
 
 export async function generateCarouselSlides(

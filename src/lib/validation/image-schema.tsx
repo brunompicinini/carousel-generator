@@ -51,6 +51,14 @@ export const ContentImageSchema = z.object({
   style: ContentImageStyleSchema.default({}),
 });
 
+export const UnstyledContentImageSchema = z.object({
+  type: z
+    .literal(ElementType.enum.ContentImage)
+    .describe(
+      `Indicates that this is a '${ElementType.enum.ContentImage}' — an image placeholder.`
+    ),
+});
+
 export const DEFAULT_CONTENT_IMAGE_INPUT: z.infer<typeof ContentImageSchema> =
   ContentImageSchema.parse({});
 
