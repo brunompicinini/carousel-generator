@@ -8,11 +8,14 @@ import {
 export function textStyleToClasses({
   style,
   sizes,
+  globalFontSize,
 }: {
   style: z.infer<typeof TextStyleSchema>;
   sizes: [string, string, string];
+  globalFontSize?: FontSizeType;
 }): string {
-  const { fontSize, align } = style;
+  const fontSize = style.fontSize ?? globalFontSize ?? FontSizeType.enum.Medium;
+  const { align } = style;
   const classes = [];
 
   classes.push(

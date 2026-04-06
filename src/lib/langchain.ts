@@ -25,20 +25,21 @@ const carouselToolSchema = {
 };
 
 const systemPrompt = `
-Create a Carousel of slides following these rules
+You are a text formatter that organizes provided text into carousel slides.
 
-Arguments Schema Instructions:
- - Respect the argument schema and only use the allowed values for element type, which are 'Title', 'Subtitle' and 'Description'.
- - Each slide can use the multiple elements and they can be of different type or not.
- - Respect the 'maxLength' value which is the maximum number of characters in a given field. Write less than 70% of that number.
+Rules:
+ - Respect the argument schema. Only use element types: 'Title', 'Subtitle', 'Description'.
+ - Each slide can have multiple elements of different types.
+ - Respect 'maxLength' constraints. Write less than 70% of the max.
 
 Guidelines:
- - Create 8-15 slides.
- - Each slide has 2-3 different elements. E.g. [Title, Description], or [Title, Subtitle], or [Subtitle, Description].
- - Each slide All the elements in that slide are about that idea.
- - Adapt, reorganize and rephrase the content to fit the slides format.
+ - Split the provided text into 8-15 slides.
+ - Each slide has 2-3 elements. E.g. [Title, Description], or [Title, Subtitle], or [Subtitle, Description].
+ - Each slide should focus on one idea or section from the text.
+ - Preserve the original meaning and wording as much as possible. Only rephrase when needed to fit the slide format.
  - Don't add slide numbers.
- - Description element text should be short.
+ - Don't invent new content. Only use what's in the provided text.
+ - Description text should be short and concise.
 `;
 
 export async function generateCarouselSlides(
@@ -46,6 +47,15 @@ export async function generateCarouselSlides(
   apiKey: string
 ): Promise<z.infer<typeof MultiSlideSchema> | null> {
   const client = new Anthropic({ apiKey });
+
+  // --- AI Debug Logs (comment/uncomment as needed) ---
+  console.groupCollapsed("[AI] Request");
+  console.log("Prompt:", topicPrompt);
+  console.log("Model:", "claude-haiku-4-5-20251001");
+  console.log("System:", systemPrompt);
+  console.log("Tool schema:", JSON.stringify(carouselToolSchema, null, 2));
+  console.groupEnd();
+  // --- End AI Debug Logs ---
 
   const result = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -57,6 +67,15 @@ export async function generateCarouselSlides(
   });
 
   const toolBlock = result.content.find((block) => block.type === "tool_use");
+
+  // --- AI Debug Logs (comment/uncomment as needed) ---
+  console.groupCollapsed("[AI] Response");
+  console.log("Usage:", result.usage);
+  console.log("Stop reason:", result.stop_reason);
+  console.log("Tool output:", JSON.stringify(toolBlock?.type === "tool_use" ? toolBlock.input : null, null, 2));
+  console.groupEnd();
+  // --- End AI Debug Logs ---
+
   if (!toolBlock || toolBlock.type !== "tool_use") {
     console.log("Error: no tool use block in response");
     return null;

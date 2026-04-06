@@ -16,12 +16,10 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { Sparkles } from "lucide-react";
-import { generateCarouselSlides } from "@/lib/langchain";
 import { DocumentFormReturn } from "@/lib/document-form-types";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { useKeysContext } from "@/lib/providers/keys-context";
 import { generateCarouselSlidesAction } from "@/app/actions";
 
 const FormSchema = z.object({
@@ -31,7 +29,6 @@ const FormSchema = z.object({
 });
 
 export function AITextAreaForm() {
-  const { apiKey } = useKeysContext();
   const { setValue }: DocumentFormReturn = useFormContext(); // retrieve those props
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -45,15 +42,7 @@ export function AITextAreaForm() {
     setIsLoading(true);
 
     // Use server action here instead of the local function
-    const generatedSlides = await generateCarouselSlidesAction(
-      `Generate a carousel from this article: "${data.prompt}"`
-    );
-
-    // TODO: Restore local function for going over limit
-    // const generatedSlides = await generateCarouselSlides(
-    //   `Generate a carousel from this article: "${data.prompt}"`,
-    //   apiKey
-    // );
+    const generatedSlides = await generateCarouselSlidesAction(data.prompt);
 
     if (generatedSlides) {
       setValue("slides", generatedSlides);
@@ -82,19 +71,19 @@ export function AITextAreaForm() {
             <FormItem>
               <FormLabel></FormLabel>
               <FormControl>
-                <div className="flex flex-row gap-2 items-center w-full">
+                <div className="flex flex-col gap-2 w-full" style={{ maxWidth: 650 }}>
                   <Textarea
-                    placeholder="An article with content for your carousel"
-                    className="flex-1"
+                    placeholder="Cole seu texto aqui para organizar em slides..."
+                    className="w-full overflow-y-auto"
+                    style={{ height: 300 }}
                     {...field}
                   />
-                  <Button type="submit" className="flex-0">
+                  <Button type="submit" className="w-full">
                     {isLoading ? (
                       <LoadingSpinner />
                     ) : (
                       <span className="flex flex-row gap-1.5">
-                        {" "}
-                        <Sparkles className="w-4 h-4" /> Generate{" "}
+                        <Sparkles className="w-4 h-4" /> Format
                       </span>
                     )}
                   </Button>

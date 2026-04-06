@@ -127,7 +127,7 @@ export function FileForm() {
         variant="ghost"
         className="w-full justify-start gap-2 h-9 text-destructive hover:text-destructive"
         onClick={() => {
-          reset(defaultValues);
+          reset(defaultValues as any);
           setCurrentPage(0);
         }}
       >

@@ -20,20 +20,20 @@ Deployed at carouselgenerator.vercel.app.
 src/
   app/
     page.tsx              # Entry: wraps <Editor> in <DocumentProvider>
-    layout.tsx            # Root layout: loads 11 Google Fonts as CSS vars
+    layout.tsx            # Root layout: loads 35 Google Fonts as CSS vars
     actions.tsx           # Server action: AI carousel generation
     api/proxy/route.ts    # Edge route: image proxy for CORS in PDF export
     globals.css           # CSS vars (shadcn theme tokens)
   components/
     editor.tsx            # Main layout: sidebar + slides area
     slides-editor.tsx     # Carousel view + AI panel
-    settings-panel.tsx    # Left sidebar with vertical tabs (Brand/Theme/Fonts/Numbers/File)
-    style-menu.tsx        # Appears when element selected (fontSize, align, lineHeight, letterSpacing, bottomSpacing, objectFit, image)
+    settings-panel.tsx    # Left sidebar with vertical tabs (Settings/Theme/Fonts/File)
+    style-menu.tsx        # Appears when element selected (fontSize, align, bottomSpacing, objectFit, image)
     main-nav.tsx          # Top bar: Pager + download popover (PDF or Images ZIP)
     slide-menubar.tsx     # Per-slide actions: move, clone, delete
     element-menubar-wrapper.tsx  # Per-element actions: move, clone, delete, change type
-    ai-panel.tsx          # "Generate with AI" section
-    ai-input-form.tsx     # AI prompt input + generate button
+    ai-panel.tsx          # "Format with AI" section
+    ai-textarea-form.tsx  # AI text paste + format button
     pager.tsx             # Slide navigation (first/prev/counter/next/last)
     pages/
       document.tsx        # Renders embla Carousel with all slides
@@ -54,10 +54,10 @@ src/
       background-image-layer.tsx  # Background image overlay
       page-number.tsx     # Slide number display
     forms/
-      brand-form.tsx      # Show brand toggle + name, handle, avatar image
+      brand-form.tsx      # Brand config: show toggle + name, handle, avatar image (inside Settings tab)
       theme-form.tsx      # Palette picker or custom hex colors
-      fonts-form.tsx      # Font1 (titles) + Font2 (body) selectors
-      page-number-form.tsx  # Show/hide page numbers toggle
+      fonts-form.tsx      # Font1 (titles) + Font2 (body) selectors with searchable combobox + per-font style controls
+      page-number-form.tsx  # Show/hide page numbers toggle (inside Settings tab)
       file-form.tsx       # File tab: export/import settings & content, reset
       fields/
         slider-input-field.tsx  # Reusable slider + number input combo
@@ -70,9 +70,9 @@ src/
       element-type.tsx      # ElementType enum + discriminated union
       text-schema.tsx       # Title/Subtitle/Description schemas + TextStyleSchema
       image-schema.tsx      # Image/ContentImage schemas + ImageStyleSchema
-      theme-schema.tsx      # ThemeSchema: primary/secondary/background hex + palette
+      theme-schema.tsx      # ThemeSchema: primary/secondary/background hex + palette + padding
       brand-schema.tsx      # BrandSchema: name, handle, avatar
-      fonts-schema.tsx      # FontsSchema: font1, font2
+      fonts-schema.tsx      # FontsSchema: font1, font2, font1Style, font2Style (lineHeight, letterSpacing, fontWeight, textBalance)
       page-number-schema.tsx  # PageNumberSchema: showNumbers boolean
     providers/
       document-provider.tsx   # Root provider: form + all contexts + localStorage persistence
@@ -95,7 +95,7 @@ src/
     themes.ts             # 40+ DaisyUI color palettes
     theme-utils.ts        # Color manipulation with culori (contrast, foreground gen)
     pallettes.tsx         # Converts DaisyUI palettes → app Colors objects
-    fonts-map.tsx         # 11 fonts: id → { className, displayName }
+    fonts-map.tsx         # 35 fonts: id → { className, displayName }
     page-size.tsx         # Slide dimensions: 400x500px
     field-path.tsx        # Utilities: getSlideNumber, getElementNumber, getStyleSibling, getParent
     text-style-to-classes.ts  # TextStyleSchema → Tailwind classes
@@ -112,8 +112,8 @@ Document
 ├── filename: string
 ├── config
 │   ├── brand: { showBrand, name, handle, avatar: ImageSchema }
-│   ├── theme: { primary, secondary, background (hex), isCustom, pallette }
-│   ├── fonts: { font1, font2 }
+│   ├── theme: { primary, secondary, background (hex), isCustom, pallette, padding }
+│   ├── fonts: { font1, font2, font1Style, font2Style }
 │   └── pageNumber: { showNumbers }
 └── slides: CommonSlideSchema[]
     ├── elements: (Title | Subtitle | Description | ContentImage)[]
@@ -125,7 +125,9 @@ Document
 ```
 
 **Element types**: Title, Subtitle, Description, ContentImage, Image
-**Text style**: fontSize (Small/Medium/Large), align (Left/Center/Right), lineHeight (0.5-4), letterSpacing (-0.1 to 0.5em), paragraphSpacing/bottomSpacing (0-3em)
+**Text style** (per-element override): fontSize (Small/Medium/Large, optional — if unset uses global), align (Left/Center/Right), paragraphSpacing/bottomSpacing (0-3em)
+**Font style** (global per-font in config.fonts): fontSize (Small/Medium/Large), lineHeight (0.5-4), letterSpacing (-0.1 to 0.5em), fontWeight (100-900), textBalance (boolean → `text-wrap: balance`)
+**Slide padding**: configurable via `config.theme.padding` (0-80px, default 40px) — controls inner padding of all slides
 **Image style**: opacity (0-100), objectFit (Contain/Cover/Expand/Fill)
   - Contain: image fits inside element
   - Cover: image fills element with crop (fixed h-40)
@@ -152,16 +154,32 @@ All state lives in a single React Hook Form instance (`useForm` with `zodResolve
 - **Expand image layout**: CommonPage detects Expand images at first/last position to adjust PageFrame padding (pt-0/pb-0) and PageLayout justify. Negative margins on ElementMenubarWrapper push image edge-to-edge.
 - **Export modes**: Download button opens popover with PDF (jsPDF) or Images ZIP (JSZip) options. Both use html-to-image canvas pipeline. Image proxy (api/proxy) handles CORS; falls back to window.location.origin if NEXT_PUBLIC_APP_URL not set.
 
-## AI Generation (Generate with AI)
+## AI Formatting (Format with AI)
 
 ### Flow
-1. User types prompt in `AIInputForm` → sent as `"A carousel with about \"<prompt>\""`
-2. Next.js server action `generateCarouselSlidesAction()` calls Anthropic API
+1. User pastes text in `AITextAreaForm` → sent directly to server action (text is passed as-is)
 3. Claude Haiku 4.5 responds via **tool use** (`carouselCreator` tool) with structured JSON
 4. Response validated against `UnstyledDocumentSchema` (Zod safeParse)
 5. Valid output transformed to `MultiSlideSchema` (adds default styles: fontSize, align, etc.)
 6. `setValue("slides", generatedSlides)` **replaces all slides** in React Hook Form state
 7. UI re-renders, localStorage auto-saves
+
+### How the AI knows the schema
+- `zodToJsonSchema()` converts Zod schemas into JSON Schema sent as the tool's `input_schema`
+- `z.string().max(160)` becomes `"maxLength": 160` in JSON Schema
+- `z.discriminatedUnion` becomes `anyOf` with `$ref` to each element type
+- `tool_choice: { type: "tool", name: "carouselCreator" }` forces Claude to respond in this exact format
+
+### Security
+- System prompt, tool schema, and raw AI response are **server-side only** — never sent to the browser
+- Browser only sees the user's own input and the final parsed slides array
+- API key is in `ANTHROPIC_API_KEY` env var, never exposed to client
+
+### Debug logging
+- `langchain.ts` has collapsible `console.groupCollapsed("[AI] Request/Response")` logs
+- Visible in the **terminal** running `pnpm dev` (not in browser)
+- Shows: prompt, model, system prompt, tool schema, usage, stop reason, full tool output
+- To disable: comment the blocks between `--- AI Debug Logs ---` markers
 
 ### AI Output Schema (Unstyled)
 ```json
@@ -180,17 +198,28 @@ All state lives in a single React Hook Form instance (`useForm` with `zodResolve
 After validation, Zod applies default styles (fontSize: "Medium", align: "Left", lineHeight: 1.3, etc.) and adds empty `backgroundImage` to each slide.
 
 ### Capabilities & Limitations
-- **Create only** — no edit/update; generation replaces all existing slides
-- **Text elements only** — AI generates Title (max 160 chars), Subtitle (max 160 chars), Description (max 240 chars)
-- **No images from AI** — images must be added manually after generation; schema supports them but prompt restricts to text
-- **8-15 slides** per generation, 2-3 elements per slide
-- **Article mode** exists (`AITextAreaForm`) but is commented out in `ai-panel.tsx` (TODO)
+- **Format only** — AI organizes/splits provided text into slides, does NOT generate new content
+- **Create only** — formatting replaces all existing slides
+- **Text elements only** — outputs Title (max 160 chars), Subtitle (max 160 chars), Description
+- **No images from AI** — images must be added manually after formatting
+- **8-15 slides** per formatting, 2-3 elements per slide
 
 ### Key Files
-- `src/lib/langchain.ts` — prompt, Anthropic SDK client, tool schema, validation
-- `src/app/actions.tsx` — server action wrapper with rate limiting
-- `src/components/ai-input-form.tsx` — UI form, calls server action, updates form state
+- `src/lib/langchain.ts` — system prompt, Anthropic SDK client, tool schema, validation, debug logs
+- `src/app/actions.tsx` — server action wrapper with optional rate limiting (Upstash Redis)
+- `src/components/ai-textarea-form.tsx` — textarea for pasting text, calls server action, updates form state
 - `src/lib/validation/slide-schema.tsx` — `UnstyledDocumentSchema`, `MultiSlideSchema`
+
+### Persistence & Images
+- All state (slides, config, images) auto-saved to **localStorage** (key: `"documentFormKey"`)
+- Uploaded images converted to **base64 data URL** via `convert-file.tsx` — stored inline in form state, no server upload
+- Images persist across page reloads (via localStorage)
+- localStorage limit ~5-10MB depending on browser
+
+### Rate Limiting (optional)
+- Uses Upstash Redis via `KV_REST_API_URL` + `KV_REST_API_TOKEN` env vars
+- Limits AI generation requests per IP
+- Only active when both env vars are set; otherwise no rate limiting
 
 ## Commands
 

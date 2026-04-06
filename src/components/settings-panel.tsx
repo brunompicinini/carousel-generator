@@ -48,9 +48,9 @@ type TabInfo = {
 };
 
 const ALL_FORMS: Record<string, TabInfo> = {
-  brand: {
-    name: "Brand",
-    value: "brand",
+  settings: {
+    name: "Settings",
+    value: "settings",
     icon: Briefcase,
   },
   theme: {
@@ -62,11 +62,6 @@ const ALL_FORMS: Record<string, TabInfo> = {
     name: "Fonts",
     value: "fonts",
     icon: Type,
-  },
-  pageNumber: {
-    name: "Numbers",
-    value: "number",
-    icon: FileDigit,
   },
   file: {
     name: "File",
@@ -148,7 +143,7 @@ function HorizontalTabTriggerButton({ tabInfo }: { tabInfo: TabInfo }) {
 
 export function SidebarTabsPanel() {
   const { currentSelection } = useSelectionContext();
-  const [tab, setTab] = useState(ALL_FORMS.brand.value);
+  const [tab, setTab] = useState(ALL_FORMS.settings.value);
   const form: DocumentFormReturn = useFormContext();
 
   return (
@@ -156,7 +151,6 @@ export function SidebarTabsPanel() {
       value={currentSelection ? "" : tab}
       onValueChange={(val) => {
         if (val) {
-          // Don't lost previous state when showing current selection
           setTab(val);
         }
       }}
@@ -165,26 +159,25 @@ export function SidebarTabsPanel() {
       <div className="flex flex-row h-full w-full">
         <ScrollArea className="border-r h-full bg-muted">
           <VerticalTabsList className="grid grid-cols-1 gap-2 w-20 rounded-none">
-            <VerticalTabTriggerButton tabInfo={ALL_FORMS.brand} />
+            <VerticalTabTriggerButton tabInfo={ALL_FORMS.settings} />
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.theme} />
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.fonts} />
-            <VerticalTabTriggerButton tabInfo={ALL_FORMS.pageNumber} />
             <VerticalTabTriggerButton tabInfo={ALL_FORMS.file} />
           </VerticalTabsList>
         </ScrollArea>
         <div className="p-2 flex flex-col items-stretch w-full ">
-          {/* //TODO: Share this area with stylemenu */}
           {currentSelection ? (
             <StyleMenu form={form} className={"m-4"} />
-          ) : // TODO: Create consistent styles between tabs and StyleMenu
-          null}
+          ) : null}
           <VerticalTabsContent
-            value={ALL_FORMS.brand.value}
+            value={ALL_FORMS.settings.value}
             className="mt-0 border-0 p-0 m-4"
           >
-            <h4 className="text-xl font-semibold">{ALL_FORMS.brand.name}</h4>
+            <h4 className="text-xl font-semibold">{ALL_FORMS.settings.name}</h4>
             <Separator className="mt-2 mb-4"></Separator>
             <BrandForm />
+            <Separator className="mt-6 mb-4"></Separator>
+            <PageNumberForm />
           </VerticalTabsContent>
           <VerticalTabsContent
             value={ALL_FORMS.theme.value}
@@ -201,16 +194,6 @@ export function SidebarTabsPanel() {
             <h4 className="text-xl font-semibold">{ALL_FORMS.fonts.name}</h4>
             <Separator className="mt-2 mb-4"></Separator>
             <FontsForm />
-          </VerticalTabsContent>
-          <VerticalTabsContent
-            value={ALL_FORMS.pageNumber.value}
-            className="mt-0 border-0 p-0 m-4"
-          >
-            <h4 className="text-xl font-semibold">
-              {ALL_FORMS.pageNumber.name}
-            </h4>
-            <Separator className="mt-2 mb-4"></Separator>
-            <PageNumberForm />
           </VerticalTabsContent>
           <VerticalTabsContent
             value={ALL_FORMS.file.value}
@@ -228,15 +211,13 @@ export function SidebarTabsPanel() {
 
 export function DrawerFormsPanel({ className }: { className: string }) {
   const { currentSelection } = useSelectionContext();
-  const [tab, setTab] = useState(ALL_FORMS.brand.value);
-  // TODO: Lift state to not loose it when drawer gets closed ?
+  const [tab, setTab] = useState(ALL_FORMS.settings.value);
 
   return (
     <Tabs
       value={currentSelection ? "" : tab}
       onValueChange={(val) => {
         if (val) {
-          // Don't lost previous state when showing current selection
           setTab(val);
         }
       }}
@@ -244,23 +225,23 @@ export function DrawerFormsPanel({ className }: { className: string }) {
     >
       <div className="flex flex-col h-full ">
         <ScrollArea className=" border-b h-full bg-muted">
-          <TabsList className="grid grid-cols-5 gap-2 h-20 rounded-none">
-            <HorizontalTabTriggerButton tabInfo={ALL_FORMS.brand} />
+          <TabsList className="grid grid-cols-4 gap-2 h-20 rounded-none">
+            <HorizontalTabTriggerButton tabInfo={ALL_FORMS.settings} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.theme} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.fonts} />
-            <HorizontalTabTriggerButton tabInfo={ALL_FORMS.pageNumber} />
             <HorizontalTabTriggerButton tabInfo={ALL_FORMS.file} />
           </TabsList>
         </ScrollArea>
         <div className="p-2 w-[320px] m-auto">
-          {/* // TODO Should be in a ScrollArea but it does not scroll */}
           <TabsContent
-            value={ALL_FORMS.brand.value}
+            value={ALL_FORMS.settings.value}
             className="mt-0 border-0 p-0 m-4 "
           >
-            <h4 className="text-xl font-semibold">{ALL_FORMS.brand.name}</h4>
+            <h4 className="text-xl font-semibold">{ALL_FORMS.settings.name}</h4>
             <Separator className="mt-2 mb-4"></Separator>
             <BrandForm />
+            <Separator className="mt-6 mb-4"></Separator>
+            <PageNumberForm />
           </TabsContent>
           <TabsContent
             value={ALL_FORMS.theme.value}
@@ -277,16 +258,6 @@ export function DrawerFormsPanel({ className }: { className: string }) {
             <h4 className="text-xl font-semibold">{ALL_FORMS.fonts.name}</h4>
             <Separator className="mt-2 mb-4"></Separator>
             <FontsForm />
-          </TabsContent>
-          <TabsContent
-            value={ALL_FORMS.pageNumber.value}
-            className="mt-0 border-0 p-0 m-4"
-          >
-            <h4 className="text-xl font-semibold">
-              {ALL_FORMS.pageNumber.name}
-            </h4>
-            <Separator className="mt-2 mb-4"></Separator>
-            <PageNumberForm />
           </TabsContent>
           <TabsContent
             value={ALL_FORMS.file.value}

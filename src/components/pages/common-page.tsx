@@ -91,12 +91,13 @@ export function CommonPage({
       )}
       <PageFrame
         fieldName={backgroundImageField}
-        className={cn(
-          firstIsExpand ? "pt-0" : "pt-10",
-          lastIsExpand ? "pb-0" : "pb-10",
-          "px-10",
-          className
-        )}
+        className={cn(className)}
+        style={{
+          paddingTop: firstIsExpand ? 0 : `${config.theme.padding ?? 40}px`,
+          paddingBottom: lastIsExpand ? 0 : `${config.theme.padding ?? 40}px`,
+          paddingLeft: `${config.theme.padding ?? 40}px`,
+          paddingRight: `${config.theme.padding ?? 40}px`,
+        }}
       >
         <PageLayout
           fieldName={backgroundImageField}

@@ -38,6 +38,7 @@ export function Description({
         textStyleToClasses({
           style: style,
           sizes: ["text-xl", "text-lg", "text-base"],
+          globalFontSize: config.fonts.font2Style?.fontSize,
         }),
         fontIdToClassName(config.fonts.font2),
         className
@@ -48,6 +49,7 @@ export function Description({
         lineHeight: config.fonts.font2Style?.lineHeight ?? 1.3,
         letterSpacing: `${config.fonts.font2Style?.letterSpacing ?? 0}em`,
         marginBottom: `${style.paragraphSpacing ?? 0}em`,
+        textWrap: config.fonts.font2Style?.textBalance ? "balance" : undefined,
       }}
     />
   );

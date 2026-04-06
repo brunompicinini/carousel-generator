@@ -9,10 +9,12 @@ export function PageFrame({
   children,
   fieldName,
   className,
+  style,
 }: {
   children: React.ReactNode;
   fieldName: string;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const { setCurrentPage } = usePagerContext();
   const { setCurrentSelection } = useSelectionContext();
@@ -21,6 +23,7 @@ export function PageFrame({
   return (
     <div
       className={cn("flex flex-col h-full w-full", className)}
+      style={style}
       onClick={(event) => {
         setCurrentPage(pageNumber);
         setCurrentSelection(fieldName, event);

@@ -10,4 +10,5 @@ export const ColorSchema = z.object({
 export const ThemeSchema = ColorSchema.extend({
   isCustom: z.boolean(),
   pallette: z.string(),
+  padding: z.number().min(0).max(80).default(40),
 });

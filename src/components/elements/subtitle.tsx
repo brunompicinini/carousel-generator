@@ -37,6 +37,7 @@ export function Subtitle({
         textStyleToClasses({
           style: style,
           sizes: ["text-3xl", "text-2xl", "text-xl"],
+          globalFontSize: config.fonts.font1Style?.fontSize,
         }),
         fontIdToClassName(config.fonts.font1),
         className
@@ -47,6 +48,7 @@ export function Subtitle({
         lineHeight: config.fonts.font1Style?.lineHeight ?? 1.3,
         letterSpacing: `${config.fonts.font1Style?.letterSpacing ?? 0}em`,
         marginBottom: `${style.paragraphSpacing ?? 0}em`,
+        textWrap: config.fonts.font1Style?.textBalance ? "balance" : undefined,
       }}
     />
   );

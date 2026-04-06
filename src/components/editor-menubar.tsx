@@ -116,7 +116,7 @@ export function EditorMenubar({}: {}) {
 
             <MenubarItem
               onClick={() => {
-                reset(defaultValues);
+                reset(defaultValues as any);
                 setCurrentPage(0);
               }}
             >

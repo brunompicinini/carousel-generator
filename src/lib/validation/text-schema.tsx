@@ -8,7 +8,7 @@ export const TextALignType = z.enum(["Left", "Center", "Right"]);
 export type TextALignType = z.infer<typeof TextALignType>;
 
 export const TextStyleSchema = z.object({
-  fontSize: FontSizeType.default(FontSizeType.enum.Medium),
+  fontSize: FontSizeType.optional(), // undefined = use global from config.fonts.fontXStyle.fontSize
   align: TextALignType.default(TextALignType.enum.Left),
   lineHeight: z.number().min(0.5).max(4).default(1.3),
   letterSpacing: z.number().min(-0.1).max(0.5).default(0),
@@ -18,7 +18,7 @@ export const TextStyleSchema = z.object({
 export const UnstyledTitleSchema = z.object({
   type: z
     .literal(ElementType.enum.Title)
-    .describe(`Indicates that this is a '${ElementType.enum.Description}'.`),
+    .describe(`Indicates that this is a '${ElementType.enum.Title}'.`),
   text: z
     .string()
     .max(160, {

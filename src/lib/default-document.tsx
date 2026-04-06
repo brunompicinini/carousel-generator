@@ -17,7 +17,7 @@ export const defaultValues = {
   slides: defaultSlideValues,
   config: {
     brand: {
-      showBrand: true,
+      showBrand: false,
       avatar: DEFAULT_IMAGE_INPUT,
       name: "My name",
       handle: "@name",
@@ -28,15 +28,16 @@ export const defaultValues = {
       primary: "#0d0d0d",
       secondary: "#161616",
       background: "#ffffff",
+      padding: 40,
     },
     fonts: {
-      font1: "DM_Serif_Display",
-      font2: "DM_Sans",
-      font1Style: { lineHeight: 1.3, letterSpacing: 0, fontWeight: 700 },
-      font2Style: { lineHeight: 1.3, letterSpacing: 0, fontWeight: 500 },
+      font1: "Anton",
+      font2: "Inter",
+      font1Style: { lineHeight: 1.3, letterSpacing: 0, fontWeight: 500, textBalance: true, fontSize: "Medium" as const },
+      font2Style: { lineHeight: 1.3, letterSpacing: -0.01, fontWeight: 500, textBalance: true, fontSize: "Medium" as const },
     },
     pageNumber: {
-      showNumbers: true,
+      showNumbers: false,
     },
   },
   filename: "My Carousel File",

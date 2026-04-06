@@ -50,7 +50,7 @@ export function AIInputForm() {
     setStatus("loading");
 
     const generatedSlides = await generateCarouselSlidesAction(
-      `A carousel with about "${data.prompt}"`
+      `A carousel about "${data.prompt}"`
     );
 
     // const generatedSlides = await generateCarouselSlides(

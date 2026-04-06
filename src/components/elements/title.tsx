@@ -41,6 +41,7 @@ export function Title({
         textStyleToClasses({
           style: style,
           sizes: ["text-7xl", "text-5xl", "text-3xl"],
+          globalFontSize: config.fonts.font1Style?.fontSize,
         }),
         fontIdToClassName(config.fonts.font1),
         className
@@ -51,6 +52,7 @@ export function Title({
         lineHeight: config.fonts.font1Style?.lineHeight ?? 1.3,
         letterSpacing: `${config.fonts.font1Style?.letterSpacing ?? 0}em`,
         marginBottom: `${style.paragraphSpacing ?? 0}em`,
+        textWrap: config.fonts.font1Style?.textBalance ? "balance" : undefined,
       }}
     />
   );

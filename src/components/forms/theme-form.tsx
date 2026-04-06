@@ -17,6 +17,7 @@ import { CustomIndicatorRadioGroupItem } from "../custom-indicator-radio-group-i
 import { ColorThemeDisplay } from "../color-theme-display";
 import { DocumentFormReturn } from "@/lib/document-form-types";
 import { Checkbox } from "../ui/checkbox";
+import { SliderInputField } from "@/components/forms/fields/slider-input-field";
 
 function PalletteSelector({ form }: { form: DocumentFormReturn }) {
   const { control, setValue } = form;
@@ -139,6 +140,15 @@ export function ThemeForm({}: {}) {
         ) : (
           <PalletteSelector form={form} />
         )}
+        <SliderInputField
+          fieldName="config.theme.padding"
+          form={form}
+          label="Padding"
+          min={0}
+          max={80}
+          step={2}
+          className="w-full"
+        />
       </form>
     </Form>
   );
