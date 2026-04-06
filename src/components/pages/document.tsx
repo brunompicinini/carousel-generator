@@ -39,7 +39,7 @@ export function Document({
   const docReference = useRefContext();
   const [api, setApi] = React.useState<CarouselApi>();
 
-  const { currentPage } = usePagerContext();
+  const { currentPage, forceScroll } = usePagerContext();
   const { numPages } = useFieldArrayValues("slides");
 
   const PAGE_GAP_PX = 8;
@@ -57,11 +57,11 @@ export function Document({
       const NEW_PAGE_BUTTON_OFFSET = 1;
       const target = currentPage + NEW_PAGE_BUTTON_OFFSET;
       const visible = api.slidesInView();
-      if (!visible.includes(target)) {
+      if (forceScroll || !visible.includes(target)) {
         api.scrollTo(target);
       }
     }
-  }, [currentPage, api]);
+  }, [currentPage, forceScroll, api]);
 
   return (
     <div className=" flex flex-row justify-center w-full">

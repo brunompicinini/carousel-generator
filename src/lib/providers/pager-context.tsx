@@ -2,9 +2,11 @@ import React, { useContext } from "react";
 
 interface PagerContextValue {
   currentPage: number;
+  forceScroll: number;
   onPreviousClick: () => void;
   onNextClick: () => void;
   setCurrentPage: (pageNum: number) => void;
+  scrollToPage: (pageNum: number) => void;
 }
 
 const PagerContext = React.createContext<PagerContextValue | undefined>(

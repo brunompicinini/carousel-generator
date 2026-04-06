@@ -37,7 +37,7 @@ const SLIDES_PER_GROUP = 3; // navigate every N slides
 
 export function AITextAreaForm() {
   const { setValue }: DocumentFormReturn = useFormContext();
-  const { setCurrentPage } = usePagerContext();
+  const { setCurrentPage, scrollToPage } = usePagerContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const cancelRef = useRef(false);
@@ -70,7 +70,7 @@ export function AITextAreaForm() {
 
       // Navigate to first slide of each new group
       if (s % SLIDES_PER_GROUP === 0) {
-        setCurrentPage(s);
+        scrollToPage(s);
         await delay(600); // let carousel scroll settle
       }
       await delay(SLIDE_PAUSE);

@@ -46,9 +46,9 @@ function SlideColorPicker({
   }, [open]);
 
   return (
-    <div className="relative flex items-center" ref={ref}>
+    <div className="relative flex items-center justify-center w-8 h-8" ref={ref}>
       <button
-        className="w-5 h-5 rounded-full border-2 border-muted-foreground/30 hover:border-muted-foreground cursor-pointer flex-shrink-0"
+        className="w-4 h-4 rounded-full border-[1.5px] border-foreground/80 hover:border-foreground cursor-pointer flex-shrink-0"
         style={{ backgroundColor: displayColor }}
         onClick={(e) => {
           e.stopPropagation();
