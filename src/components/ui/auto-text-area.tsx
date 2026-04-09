@@ -20,7 +20,7 @@ const AutoTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <TextareaAutosize
           // TODO: Auto text area includes some kind of margin or letter spacing, specially on the bottom
           className={cn(
-            "w-full rounded-md outline outline-transparent hover:outline-input outline-2 bg-transparent text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden resize-none p-0",
+            "w-full rounded-md outline outline-transparent outline-2 bg-transparent text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden resize-none p-0",
             className
           )}
           {...props}
