@@ -23,6 +23,9 @@ import { ElementType } from "@/lib/validation/element-type";
 import { ContentImage, ContentImageFillLayer } from "@/components/elements/content-image";
 import ElementMenubarWrapper from "@/components/element-menubar-wrapper";
 import { ObjectFitType, ContentImageSchema } from "@/lib/validation/image-schema";
+import { XTwitter } from "@/components/elements/x-twitter";
+import { TweetBlock } from "@/components/elements/tweet-block";
+import { BrandTemplate } from "@/lib/validation/brand-schema";
 
 export function CommonPage({
   index,
@@ -49,6 +52,10 @@ export function CommonPage({
   const lastIsExpand =
     lastElement?.type === ElementType.enum.ContentImage &&
     (lastElement as z.infer<typeof ContentImageSchema>).style.objectFit === ObjectFitType.enum.Expand;
+
+  const brandTemplate = config.brand.template ?? BrandTemplate.enum.FooterFull;
+  const showBrandTweetAtTop =
+    config.brand.showBrand && brandTemplate === BrandTemplate.enum.Tweet;
 
   return (
     <PageBase size={size} fieldName={backgroundImageField}>
@@ -79,6 +86,16 @@ export function CommonPage({
           fieldName={backgroundImageField}
           className={cn("gap-2", firstIsExpand && "justify-start")}
         >
+          {showBrandTweetAtTop && (
+            <div className="w-full mb-2">
+              <TweetBlock
+                config={config}
+                name={config.brand.name}
+                handle={config.brand.handle}
+                avatar={config.brand.avatar}
+              />
+            </div>
+          )}
           {slide.elements.map((element, index) => {
             const currentField = (fieldName +
               ".elements." +
@@ -125,6 +142,13 @@ export function CommonPage({
                   isFirst={index === 0}
                   isLast={index === slide.elements.length - 1}
                 />
+              </ElementMenubarWrapper>
+            ) : element.type == ElementType.enum.XTwitter ? (
+              <ElementMenubarWrapper
+                key={currentField}
+                fieldName={currentField}
+              >
+                <XTwitter fieldName={currentField as ElementFieldPath} />
               </ElementMenubarWrapper>
             ) : null;
           })}

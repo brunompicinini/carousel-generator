@@ -1,8 +1,12 @@
 import * as z from "zod";
 import { DEFAULT_IMAGE_INPUT, ImageSchema } from "./image-schema";
 
+export const BrandTemplate = z.enum(["FooterFull", "FooterHandle", "Tweet"]);
+export type BrandTemplate = z.infer<typeof BrandTemplate>;
+
 export const BrandSchema = z.object({
   showBrand: z.boolean().default(true),
+  template: BrandTemplate.default(BrandTemplate.enum.FooterFull),
   avatar: ImageSchema.default(DEFAULT_IMAGE_INPUT),
   name: z
     .string()

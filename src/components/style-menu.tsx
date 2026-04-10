@@ -108,7 +108,7 @@ export function StyleMenu({
     return <></>;
   }
   const values = form.getValues(elementPath as ElementFieldPath);
-  const style = values.style;
+  const style = (values as any).style;
   const type = values.type;
   const isTextElement =
     type === ElementType.enum.Title ||
@@ -211,6 +211,11 @@ export function StyleMenu({
               />
             </div>
           </>
+        ) : null}
+        {type == ElementType.enum.XTwitter ? (
+          <p className="text-sm text-muted-foreground">
+            This element uses your brand settings. Edit name, handle and avatar in the Settings tab.
+          </p>
         ) : null}
         {style && Object.hasOwn(style, "objectFit") ? (
           <EnumRadioGroupField

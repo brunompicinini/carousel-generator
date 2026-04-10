@@ -14,6 +14,7 @@ import {
   UnstyledSubtitleSchema,
   UnstyledDescriptionSchema,
 } from "./text-schema";
+import { XTwitterSchema } from "./xtwitter-schema";
 
 export const SlideType = z.enum(["Intro", "Content", "Outro", "Common"]);
 export type SlideType = z.infer<typeof SlideType>;
@@ -31,6 +32,7 @@ export const ElementSchema = z.discriminatedUnion("type", [
   DescriptionSchema,
   ContentImageSchema,
   ImageSchema,
+  XTwitterSchema,
 ]);
 
 export const UnstyledSlideSchema = z.object({
