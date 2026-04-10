@@ -11,9 +11,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { DocumentFormReturn } from "@/lib/document-form-types";
 import { ImageFormField } from "@/components/forms/fields/image-form-field";
+import { BrandTemplate } from "@/lib/validation/brand-schema";
+
+const TEMPLATE_OPTIONS: { value: BrandTemplate; label: string }[] = [
+  { value: "FooterFull", label: "Footer (Full)" },
+  { value: "FooterHandle", label: "Footer (Handle only)" },
+  { value: "Tweet", label: "Tweet (Top)" },
+];
 
 export function BrandForm({}: {}) {
   const form: DocumentFormReturn = useFormContext(); // retrieve those props
@@ -83,6 +97,34 @@ export function BrandForm({}: {}) {
                   disabled={!showBrand}
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="config.brand.template"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Template</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={!showBrand}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

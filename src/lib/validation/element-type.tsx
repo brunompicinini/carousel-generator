@@ -6,5 +6,6 @@ export const ElementType = z.enum([
   "Description",
   "Image",
   "ContentImage",
+  "XTwitter",
 ]);
 export type ElementType = z.infer<typeof ElementType>;

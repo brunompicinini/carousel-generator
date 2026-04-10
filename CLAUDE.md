@@ -48,8 +48,10 @@ src/
       subtitle.tsx        # Subtitle element (font1, secondary color)
       description.tsx     # Description element (font2, secondary color)
       content-image.tsx   # Inline image element + ContentImageFillLayer for Fill mode
-      signature.tsx       # Brand name + handle in footer
-      footer.tsx          # Signature + page number
+      x-twitter.tsx       # X/Twitter element: reads name/handle/avatar from config.brand (no own fields)
+      tweet-block.tsx     # Shared 2-column tweet visual (used by XTwitter element and brand Tweet template)
+      signature.tsx       # Brand name + handle in footer (FooterFull template)
+      footer.tsx          # Footer renderer (respects brand template: FooterFull / FooterHandle / empty when Tweet)
       background-layer.tsx    # Solid color background
       background-image-layer.tsx  # Background image overlay
       page-number.tsx     # Slide number display
@@ -70,8 +72,9 @@ src/
       element-type.tsx      # ElementType enum + discriminated union
       text-schema.tsx       # Title/Subtitle/Description schemas + TextStyleSchema
       image-schema.tsx      # Image/ContentImage schemas + ImageStyleSchema
+      xtwitter-schema.tsx   # XTwitterSchema: { type } only — reads brand data at render time
       theme-schema.tsx      # ThemeSchema: primary/secondary/background hex + palette + padding
-      brand-schema.tsx      # BrandSchema: name, handle, avatar
+      brand-schema.tsx      # BrandSchema: name, handle, avatar, template (FooterFull/FooterHandle/Tweet)
       fonts-schema.tsx      # FontsSchema: font1, font2, font1Style, font2Style (fontSize, lineHeight, letterSpacing, fontWeight, textBalance)
       page-number-schema.tsx  # PageNumberSchema: showNumbers boolean
     providers/
@@ -113,21 +116,21 @@ src/
 Document
 ├── filename: string
 ├── config
-│   ├── brand: { showBrand, name, handle, avatar: ImageSchema }
+│   ├── brand: { showBrand, template, name, handle, avatar: ImageSchema }
 │   ├── theme: { primary, secondary, background (hex), isCustom, pallette, padding }
 │   ├── fonts: { font1, font2, font1Style, font2Style }
 │   └── pageNumber: { showNumbers }
 └── slides: CommonSlideSchema[]
-    ├── elements: (Title | Subtitle | Description | ContentImage)[]
+    ├── elements: (Title | Subtitle | Description | ContentImage | XTwitter)[]
     │   ├── type: ElementType discriminator
     │   ├── text: string (for text elements)
     │   ├── source: { src, type } (for image elements)
-    │   └── style: TextStyleSchema | ContentImageStyleSchema
+    │   └── style: TextStyleSchema | ContentImageStyleSchema (absent for XTwitter — it reads from config.brand)
     ├── backgroundImage: ImageSchema
     └── backgroundColor: string (optional, per-slide override of theme background)
 ```
 
-**Element types**: Title, Subtitle, Description, ContentImage, Image
+**Element types**: Title, Subtitle, Description, ContentImage, Image, XTwitter
 **Text style** (per-element override): fontSize (8-200px, optional — if unset computed from global), align (Left/Center/Right), paragraphSpacing/bottomSpacing (0-3em), color (optional hex — overrides theme primary/secondary), backgroundColor (optional hex — highlight behind text)
 **Font style** (global per-font in config.fonts): fontSize (8-200px, default font1=48, font2=18), lineHeight (0.5-4), letterSpacing (-0.1 to 0.5em), fontWeight (100-900), textBalance (boolean → `text-wrap: balance`)
 **Font size proportional scaling**: Title uses global font1 fontSize directly. Subtitle uses font1 fontSize × 0.65. Description uses global font2 fontSize. Per-element fontSize override takes priority over global.
@@ -139,7 +142,11 @@ Document
   - Fill: image becomes full-slide background layer (rendered via ContentImageFillLayer at PageBase level)
   - Height slider appears in style menu for ContentImage (except Fill mode), default 200px
 **Per-slide background color**: optional `backgroundColor` field on each slide, overrides global `config.theme.background`. Color picker dot in slide menubar (between arrows) with hex input and "Reset to global" option.
-**Brand**: showBrand toggle controls footer signature visibility
+**Brand**: showBrand toggle controls global brand visibility. `template` selects one of:
+  - **FooterFull** (default): avatar + name + handle signature in footer (left), page number right
+  - **FooterHandle**: only `@handle` centered in footer, page number absolute-right
+  - **Tweet**: TweetBlock rendered as the first child INSIDE `PageLayout` (above the normal elements) so it is composed with them by the `justify-center` flex — the whole group (tweet + elements) stays vertically centered. Footer shows only page number. Grid stays `1fr auto`; no special row override.
+**XTwitter element**: per-slide version of the brand Tweet block. Schema is just `{ type: "XTwitter" }` — it reads `name`, `handle`, and `avatar` from `config.brand` at render time, so there are no per-element editable fields. Use it when you want the tweet block on some slides only (e.g. just the cover) rather than on every slide via the brand Tweet template. Both paths share the `TweetBlock` component for identical visuals. StyleMenu shows a hint pointing back to the Settings tab when an XTwitter element is selected; it accesses style via `(values as any).style` so all style-dependent blocks short-circuit on `undefined`.
 
 ## State Management
 
@@ -169,7 +176,7 @@ All state lives in a single React Hook Form instance (`useForm` with `zodResolve
 - **Per-element color overrides**: Text elements (Title/Subtitle/Description) support optional `color` and `backgroundColor` in their style. Color pickers appear in the StyleMenu when a text element is selected. Reset buttons revert to theme defaults.
 - **Slide vertical layout**: `PageFrame` uses CSS Grid (`grid-template-rows: 1fr auto`) with 3 children: (1) `PageLayout` in the `1fr` row centers elements with `justify-center`, (2) a wrapper div in the `auto` row holds both `AddElement` button and `Footer`. This ensures the "+" button doesn't affect vertical centering of content elements.
 - **Reset all**: Settings tab has a "Reset all" button that calls `form.reset(defaultValues)` + `localStorage.removeItem("documentFormKey")` to start fresh.
-- **Inline markdown in text fields**: Title/Subtitle/Description support `*bold*` and `_italic_` via a minimal parser in `inline-markdown.ts`. `TextAreaFormField` toggles between an editable `<textarea>` (showing raw markdown source) when focused and a `<div>` with `dangerouslySetInnerHTML` (rendered HTML) when blurred. Regex requires non-whitespace on both sides of the delimiters (`*foo*`, not `* foo *`) to avoid matching literal asterisks in text like `5 * 3`. Input is HTML-escaped before applying markdown so the output is safe. Only switches to the rendered div when the text actually contains markdown — plain text always shows the textarea to avoid visual jumps and preserve placeholder behavior.
+- **Inline markdown in text fields**: Title/Subtitle/Description support `*bold*` and `_italic_` via a minimal parser in `inline-markdown.ts`. `TextAreaFormField` toggles between an editable `<textarea>` (showing raw markdown source) when focused and a `<div>` with `dangerouslySetInnerHTML` (rendered HTML) when blurred. Regex requires non-whitespace on both sides of the delimiters (`*foo*`, not `* foo *`) to avoid matching literal asterisks in text like `5 * 3`. Escapes: `\*` and `\_` produce literal `*` / `_` — they are swapped out to private-use Unicode placeholders (`\uE000`, `\uE001`) before the markdown regex runs, then restored as literals in the output. `hasInlineMarkdown` returns true whenever an escape is present so the rendered div is shown (the backslashes must be stripped for display). Input is HTML-escaped before applying markdown so the output is safe.
 - **Title/Subtitle descender clipping**: Title and Subtitle elements apply `clipPath: "inset(0 0 0.2em 0)"` and compensate with `marginBottom: calc(... - 0.2em)` to trim ugly descender/line-gap space at the bottom of display fonts. `PageBase` uses `overflowClipMarginTop: "40px"` (per-side longhand) so the element menubar (positioned at `-top-9` on the first element) can still escape the slide's top edge without letting images or other content bleed out the bottom/sides.
 
 ## AI Formatting (Format with AI)

@@ -20,12 +20,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { ElementType } from "@/lib/validation/element-type";
 import { TitleSchema, SubtitleSchema, DescriptionSchema } from "@/lib/validation/text-schema";
 import { ContentImageSchema } from "@/lib/validation/image-schema";
+import { XTwitterSchema } from "@/lib/validation/xtwitter-schema";
 
 const ELEMENT_TYPE_LABELS: Record<string, string> = {
   [ElementType.enum.Title]: "Title",
   [ElementType.enum.Subtitle]: "Subtitle",
   [ElementType.enum.Description]: "Description",
   [ElementType.enum.ContentImage]: "Image",
+  [ElementType.enum.XTwitter]: "X/Twitter",
 };
 
 function getDefaultForType(type: string) {
@@ -38,6 +40,8 @@ function getDefaultForType(type: string) {
       return DescriptionSchema.parse({});
     case ElementType.enum.ContentImage:
       return ContentImageSchema.parse({});
+    case ElementType.enum.XTwitter:
+      return XTwitterSchema.parse({});
     default:
       return TitleSchema.parse({});
   }
